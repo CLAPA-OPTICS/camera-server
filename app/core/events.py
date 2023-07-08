@@ -10,7 +10,7 @@ from .Camera import Camera
 
 def create_start_app_handler(app: FastAPI) -> Callable:  # type: ignore
     async def start_app() -> None:
-        #app.state.camera = Camera()
+        app.state.camera = Camera()
         #app.state.camera.start()
         await connect_to_db(app)
 

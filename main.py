@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -11,23 +11,7 @@ from app.core.config import get_app_settings
 from app.core.events import create_start_app_handler, create_stop_app_handler
 
 def get_application() -> FastAPI:
-    
-    #settings = get_app_settings()
-
-    #settings.configure_logging()
-
-    #global application
-    #application = FastAPI(**settings.fastapi_kwargs)
     application = FastAPI()
-
-    #application.add_middleware(
-    #    CORSMiddleware,
-    #    allow_origins=settings.allowed_hosts,
-    #    allow_credentials=True,
-    #    allow_methods=["*"],
-    #    allow_headers=["*"],
-    #)
-
     origins = ["*"]
     application.add_middleware(
         CORSMiddleware,
