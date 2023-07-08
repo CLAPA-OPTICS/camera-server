@@ -1,14 +1,15 @@
 import asyncio
 from fastapi import FastAPI
 from loguru import logger
-
+#import sqlite3
 from ..core.settings.app import AppSettings
 
 async def connect_to_db(app: FastAPI) -> None:
     logger.info("Connecting to Asyncio queue")
 
-    app.state.pool = asyncio.Queue(100)
-    
+    #app.state.pool = asyncio.Queue(100)
+    #app.state.db = sqlite3.connect('.cache/config.db')
+
     logger.info("Connection established")
 
     #while True:
