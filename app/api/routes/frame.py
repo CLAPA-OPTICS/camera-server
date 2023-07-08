@@ -1,19 +1,16 @@
 import cv2
 import asyncio
 import numpy as np
-from numpy import ndarray
-from typing import Optional
 from pydantic import BaseModel
-from fastapi import APIRouter, Body, Depends, Response, BackgroundTasks
+from starlette.requests import Request
+from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse, ORJSONResponse
 from app.core.Camera import Camera
 
 isAddFrame = False
 
-def get_camera() -> Camera:
-    #camera = Camera()
-    main = __import__("__main__")
-    application = main.app
+def get_camera(request: Request) -> Camera:
+    application = request.app
     camera = application.state.camera
     return camera
 
@@ -33,7 +30,7 @@ class Item(BaseModel):
 async def generate_frames(camera: Camera,
                           type = "8_bits"):
     global isAddFrame
-    while isAddFrame:
+    while True:
         # 从视频流中读取帧。
         frame = cv2.cvtColor(camera.get_frame(), cv2.COLOR_GRAY2BGR)
         # 将帧转换为JPEG格式。
@@ -62,10 +59,11 @@ router = APIRouter()
 
 ##################################################################
 
+"""将视频流作为流响应返回。"""
 @router.get("/frame")
 async def get_8_bits_img(camera: Camera = Depends(get_camera), 
                          type: str = "8_bits"):
-    """将视频流作为流响应返回。"""
+    
     data = generate_frames(camera, type)
     return StreamingResponse(data,
                     media_type="multipart/x-mixed-replace;boundary=frame")
@@ -74,7 +72,7 @@ async def get_8_bits_img(camera: Camera = Depends(get_camera),
 @router.get("/get_projection", response_class=ORJSONResponse)
 def get_projection(camera: Camera = Depends(get_camera), 
                    x1: float = 0.0, x2: float = 100.0):
-    """将视频流作为流响应返回。"""
+
     data = get_axis_data(camera, x1, x2)
     return ORJSONResponse(data)
 
@@ -82,7 +80,9 @@ def get_projection(camera: Camera = Depends(get_camera),
 @router.post("/set_exposure_time", response_class=ORJSONResponse)
 def get_projection(camera: Camera = Depends(get_camera),
                    time: float = 0.0):
-    """将视频流作为流响应返回。"""
+
+    global isAddFrame
+    isAddFrame = False
     set_exposure_time(camera, time)
     return
 
