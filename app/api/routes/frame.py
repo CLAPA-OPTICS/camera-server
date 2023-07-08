@@ -32,6 +32,10 @@ async def generate_frames(camera: Camera,
     global isAddFrame
     while True:
         # 从视频流中读取帧。
+        
+        if not isAddFrame:
+            break
+        
         frame = cv2.cvtColor(camera.get_frame(), cv2.COLOR_GRAY2BGR)
         # 将帧转换为JPEG格式。
         ret, buffer = cv2.imencode(".jpg", frame)
@@ -105,7 +109,7 @@ def start_sample(backgroundtasks: BackgroundTasks,
                  camera: Camera = Depends(get_camera)):
     global isAddFrame
     isAddFrame = True
-    backgroundtasks.add_task(add_frame, camera.buffer, camera)
+    #backgroundtasks.add_task(add_frame, camera.buffer, camera)
     return
 
 @router.get("/stop_sample")
