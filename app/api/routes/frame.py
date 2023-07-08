@@ -33,7 +33,7 @@ class Item(BaseModel):
 async def generate_frames(camera: Camera,
                           type = "8_bits"):
     global isAddFrame
-    while True:
+    while isAddFrame:
         # 从视频流中读取帧。
         frame = cv2.cvtColor(camera.get_frame(), cv2.COLOR_GRAY2BGR)
         # 将帧转换为JPEG格式。
@@ -88,11 +88,15 @@ def get_projection(camera: Camera = Depends(get_camera),
 
 @router.get("/start")
 def start(camera: Camera = Depends(get_camera)):
+    global isAddFrame
+    isAddFrame = True
     camera.start()
     return
 
 @router.get("/close")
 def close(camera: Camera = Depends(get_camera)):
+    global isAddFrame
+    isAddFrame = False
     camera.release()
     return
 

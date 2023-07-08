@@ -7,7 +7,7 @@ class Camera(object):
 		super(Camera, self).__init__()
 		self.pFrameBuffer = 0
 		self.quit = False
-		self.buffer = asyncio.Queue(20)
+		#self.buffer = asyncio.Queue(20)
 
 	def __del__(self):
 		# 关闭相机
