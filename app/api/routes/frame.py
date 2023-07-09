@@ -28,15 +28,18 @@ class Item(BaseModel):
     max: float
 
 async def generate_frames(camera: Camera,
-                          type = "8_bits"):
+                          type = "8_bits",
+                          cmap: int = -1):
     global isAddFrame
     while True:
         # 从视频流中读取帧。
         
         if not isAddFrame:
             break
-        
-        frame = cv2.cvtColor(camera.get_frame(), cv2.COLOR_GRAY2BGR)
+        data = camera.get_frame() if type == '8_bits' else camera.raw_frame()
+        frame = cv2.cvtColor(data, cv2.COLOR_GRAY2BGR)
+        if cmap >=0:
+            frame = cv2.applyColorMap(frame, cmap)
         # 将帧转换为JPEG格式。
         ret, buffer = cv2.imencode(".jpg", frame)
         # 将JPEG数据转换为字节字符串，并将其作为流响应返回。
@@ -66,9 +69,10 @@ router = APIRouter()
 """将视频流作为流响应返回。"""
 @router.get("/frame")
 async def get_8_bits_img(camera: Camera = Depends(get_camera), 
-                         type: str = "8_bits"):
+                         type: str = "8_bits", 
+                         cmap: int = -1):
     
-    data = generate_frames(camera, type)
+    data = generate_frames(camera, type, cmap)
     return StreamingResponse(data,
                     media_type="multipart/x-mixed-replace;boundary=frame")
 
@@ -105,11 +109,9 @@ def close(camera: Camera = Depends(get_camera)):
     return
 
 @router.get("/start_sample")
-def start_sample(backgroundtasks: BackgroundTasks, 
-                 camera: Camera = Depends(get_camera)):
+def start_sample():
     global isAddFrame
     isAddFrame = True
-    #backgroundtasks.add_task(add_frame, camera.buffer, camera)
     return
 
 @router.get("/stop_sample")
