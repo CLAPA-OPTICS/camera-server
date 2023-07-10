@@ -117,29 +117,23 @@ class Camera(object):
 		frame = np.asarray(frame[::-1, :], dtype=np.uint16)
 		return frame
 
+	def pause(self):
+		return mvsdk.CameraPause(self.hCamera)
+	
+	def play(self):
+		return mvsdk.CameraPlay(self.hCamera)
+
+	def CameraSetGain(self, gain: int):
+		return mvsdk.CameraSetGain(self.hCamera, iRGain = gain, iGGain = gain, iBGain = gain)
+
+	def CameraSetContrast(self, iContrast: int):
+		return mvsdk.CameraSetContrast(self.hCamera, iContrast)
+
+	def CameraSetGamma(self, iGamma: int):
+		return mvsdk.CameraSetGamma(self.hCamera, iGamma)
+
 	def CameraSetExposureTime(self, time: float):
-		mvsdk.CameraPause(self.hCamera)
-		mvsdk.CameraSetExposureTime(self.hCamera, time)
-		mvsdk.CameraPlay(self.hCamera)
-		return
+		return mvsdk.CameraSetExposureTime(self.hCamera, time)
 
-	######
-	async def run(self):
-		while True:
-			await self.buffer.put(self.get_frame())
-	
-	######
-	async def from_buffer(self):
-		await self.buffer.get()
-
-'''
-def reconstruct():
-	with open('./config.yml', 'r', encoding='utf-8') as f:
-		config = yaml.load(f.read(), Loader=yaml.FullLoader)
-
-	frame = np.fromfile("raw_16.RAW", dtype = "uint16").reshape(config["height"], 
-						config["width"], 1)/2**8
-	
-	frame = np.asarray(frame[::-1, :], dtype=np.uint16)
-	return cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
-'''
+	def CameraSetCrossLine(self, iLine, x, y, uColor = 255, bVisible = True):
+		return mvsdk.CameraSetCrossLine(self.hCamera, iLine, x, y, uColor, bVisible)

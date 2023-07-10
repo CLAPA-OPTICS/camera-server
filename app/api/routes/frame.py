@@ -1,9 +1,11 @@
 import cv2
 import asyncio
 import numpy as np
-from pydantic import BaseModel
+from typing import Union
+from loguru import logger
+from app.db.schemas import ParamsBase
 from starlette.requests import Request
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse, ORJSONResponse
 from app.core.Camera import Camera
 
@@ -21,11 +23,6 @@ def get_queue() -> asyncio.Queue:
 def add_frame(q: asyncio.Queue, camera: Camera):
     while isAddFrame:
         q.append(camera.get_frame())
-
-class Item(BaseModel):
-    name: str
-    min: float
-    max: float
 
 async def generate_frames(camera: Camera,
                           type = "8_bits",
@@ -59,7 +56,37 @@ def get_axis_data(camera: Camera,
 
 def set_exposure_time(camera: Camera, 
                       time: float = 200000):
+    camera.pause()
     camera.CameraSetExposureTime(time)
+    camera.play()
+    return
+
+def set_cross_line(camera: Camera, 
+                   x: int = 0, 
+                   y: int = 0):
+    camera.pause()
+    camera.CameraSetExposureTime(0, x, y, uColor = 255, bVisible = True)
+    camera.play()
+    return
+
+def set_camera_parameters(camera: Camera, 
+                          params: ParamsBase):
+    
+    params_dict = params.dict()
+
+    func_dict = {
+        "gain": camera.CameraSetGain,
+        "gamma": camera.CameraSetGamma,
+        "contrast": camera.CameraSetContrast,
+        "exposure_time": camera.CameraSetExposureTime
+    }
+
+    camera.pause()
+    for param, value in params_dict.items():
+        if value is not None:
+            logger.info(f"set {param} as {value}")
+            func_dict[param](value)
+    camera.play()
     return
 
 router = APIRouter()
@@ -86,12 +113,24 @@ def get_projection(camera: Camera = Depends(get_camera),
 
 # 设置相机曝光。
 @router.post("/set_exposure_time", response_class=ORJSONResponse)
-def get_projection(camera: Camera = Depends(get_camera),
+def set_camera_exposure(camera: Camera = Depends(get_camera),
                    time: float = 0.0):
 
     global isAddFrame
     isAddFrame = False
     set_exposure_time(camera, time)
+    return
+
+# 设置相机曝光。
+@router.post("/set_camera_parameters")
+def set_camera(*,
+                camera: Camera = Depends(get_camera),
+                params: ParamsBase):
+
+    global isAddFrame
+    isAddFrame = False
+    set_camera_parameters(camera, params)
+    isAddFrame = True
     return
 
 @router.get("/start")

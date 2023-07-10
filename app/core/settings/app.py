@@ -2,7 +2,7 @@ import logging
 import sys
 from typing import Any, Dict, List, Tuple
 
-from loguru import logger
+#from loguru import logger
 from pydantic import PostgresDsn, SecretStr
 
 from ..logging import InterceptHandler
