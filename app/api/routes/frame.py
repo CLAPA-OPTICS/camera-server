@@ -1,4 +1,8 @@
 import cv2
+
+from scipy.ndimage import gaussian_filter
+from scipy.signal import find_peaks, peak_widths
+
 import asyncio
 import numpy as np
 from typing import Union
@@ -54,18 +58,41 @@ def get_axis_data(camera: Camera,
     data_1 = data_1/np.nanmax(data_1)
     return [{"index_0": index_1[i], "axis_0": data_1[i]} for i in range(index_1.shape[0])]
 
+def get_fwhm(camera: Camera, 
+             x1: float = 0.0, x2: float = 100.0):
+    
+    data = camera.raw_frame()
+    shape_1 = data.shape[1]
+    print(int(x1/100*(shape_1 - 1)), int(x2/100*(shape_1 - 1)))
+    data_1 = np.sum(data[int(x1/100*(shape_1 - 1)):int(x2/100*(shape_1 - 1))], axis = 0).flatten()
+    data_1 = data_1/np.nanmax(data_1)
+    logger.info(data_1)
+    peaks, _ = find_peaks(data_1, rel_height = 1.0)
+    results_half = peak_widths(data_1, peaks, rel_height = 0.5)
+
+    return {"width": results_half[0], 
+            "height": results_half[1], 
+            "x1": results_half[2], 
+            "x2": results_half[3]}
+
+
+'''
 def set_exposure_time(camera: Camera, 
                       time: float = 200000):
     camera.pause()
     camera.CameraSetExposureTime(time)
     camera.play()
     return
+'''
 
 def set_cross_line(camera: Camera, 
                    x: int = 0, 
                    y: int = 0):
+    
+    x = int(camera.cap.sResolutionRange.iWidthMax/2)
+    y = int(camera.cap.sResolutionRange.iHeightMax/2)
     camera.pause()
-    camera.CameraSetExposureTime(0, x, y, uColor = 255, bVisible = True)
+    camera.CameraSetCrossLine(0, x, y)
     camera.play()
     return
 
@@ -111,6 +138,25 @@ def get_projection(camera: Camera = Depends(get_camera),
     data = get_axis_data(camera, x1, x2)
     return ORJSONResponse(data)
 
+
+# 一维投影。
+@router.get("/get_fwhm", response_class=ORJSONResponse)
+def get_fwhm_value(camera: Camera = Depends(get_camera), 
+                   x1: float = 0.0, x2: float = 100.0):
+
+    data = get_fwhm(camera, x1, x2)
+
+    return ORJSONResponse(data)
+
+# Cross Line。
+@router.get("/set_cross_line")
+def add_cross_line(camera: Camera = Depends(get_camera), 
+                   x1: float = 0.0, x2: float = 100.0):
+
+    set_cross_line(camera, x1, x2)
+    return
+
+'''
 # 设置相机曝光。
 @router.post("/set_exposure_time", response_class=ORJSONResponse)
 def set_camera_exposure(camera: Camera = Depends(get_camera),
@@ -120,6 +166,8 @@ def set_camera_exposure(camera: Camera = Depends(get_camera),
     isAddFrame = False
     set_exposure_time(camera, time)
     return
+'''
+
 
 # 设置相机曝光。
 @router.post("/set_camera_parameters")

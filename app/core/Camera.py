@@ -42,6 +42,7 @@ class Camera(object):
 
 		# 获取相机特性描述
 		cap = mvsdk.CameraGetCapability(hCamera)
+		self.cap = cap
 
 		# 判断是黑白相机还是彩色相机
 		monoCamera = (cap.sIspCapacity.bMonoSensor != 0)
@@ -135,5 +136,5 @@ class Camera(object):
 	def CameraSetExposureTime(self, time: float):
 		return mvsdk.CameraSetExposureTime(self.hCamera, time)
 
-	def CameraSetCrossLine(self, iLine, x, y, uColor = 255, bVisible = True):
+	def CameraSetCrossLine(self, iLine: int, x: int, y: int, uColor:int = 0, bVisible: bool = True):
 		return mvsdk.CameraSetCrossLine(self.hCamera, iLine, x, y, uColor, bVisible)
