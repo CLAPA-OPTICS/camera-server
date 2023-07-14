@@ -12,7 +12,7 @@ from app.core.events import create_start_app_handler, create_stop_app_handler
 
 def get_application() -> FastAPI:
     application = FastAPI()
-    origins = ["*"]
+    origins = ["http://localhost:5173"]
     application.add_middleware(
         CORSMiddleware,
         allow_origins=origins,  # 允许访问的源
